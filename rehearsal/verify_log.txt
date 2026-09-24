@@ -1,0 +1,30 @@
+== python rehearsal.py verify ==
+rebuilt splits: CNN2 val=12542  FOURTH val=12545  (FOURTH log says 12,545)
+   fourth: 2560/12545  (80s)
+   fourth: 5120/12545  (173s)
+   fourth: 7680/12545  (267s)
+   fourth: 10240/12545  (356s)
+FOURTH val, fourth: 12213/12545 = 97.35%   (recorded earlier: 12213)   MATCH
+   fourth_nofont: 2560/12545  (66s)
+   fourth_nofont: 5120/12545  (131s)
+   fourth_nofont: 7680/12545  (200s)
+   fourth_nofont: 10240/12545  (260s)
+FOURTH val, fourth_nofont: 12243/12545 = 97.59%   (recorded earlier: 12243)   MATCH
+   cnn2 val: 2560/12542  (80s)
+   cnn2 val: 5120/12542  (168s)
+   cnn2 val: 7680/12542  (256s)
+   cnn2 val: 10240/12542  (340s)
+CNN2 val (held out by CNN2): 12157/12542 = 96.93%
+   cnn2 train sample: 2560/4000  (82s)
+CNN2 on 4000 of ITS OWN TRAIN images: 3885/4000 = 97.12%  (should be higher than on val if the split is right)
+
+== loss-gap check (n=3000 each; FOURTH = control) ==
+CONTROL (split proven exact): held-out   loss 0.1826  mean-confidence 0.8879  acc 96.80%   (n=3000)
+CONTROL (split proven exact): train      loss 0.1667  mean-confidence 0.8913  acc 97.37%   (n=3000)
+CONTROL (split proven exact): loss gap held-out minus train = +0.0159
+
+CNN2 (split being checked): held-out   loss 0.1204  mean-confidence 0.9762  acc 96.50%   (n=3000)
+CNN2 (split being checked): train      loss 0.0972  mean-confidence 0.9795  acc 97.43%   (n=3000)
+CNN2 (split being checked): loss gap held-out minus train = +0.0232
+
+DONE

@@ -26,8 +26,14 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from PIL import Image
 
+for _stream in (sys.stdout, sys.stderr):   # a Thai/odd path in a message must not crash the run
+    try:
+        _stream.reconfigure(errors="replace")
+    except Exception:
+        pass
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-IMG_EXT = (".jpg", ".jpeg", ".png", ".bmp")
+IMG_EXT = (".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff", ".gif")
 NUM_CLASSES = 72
 FALLBACK_FOLDER = "210"  # most frequent class; used only if an image cannot be opened (blank scores 0 anyway)
 
@@ -153,7 +159,10 @@ def natural_key(name):
 
 
 def build_model(ckpt_path, device):
-    ckpt = torch.load(ckpt_path, map_location=device, weights_only=True)
+    try:
+        ckpt = torch.load(ckpt_path, map_location=device, weights_only=True)
+    except TypeError:   # torch < 1.13 does not know weights_only
+        ckpt = torch.load(ckpt_path, map_location=device)
     if not (isinstance(ckpt, dict) and "model_state" in ckpt and "class_to_idx" in ckpt):
         sys.exit(f"{ckpt_path}: expected a checkpoint with 'model_state' and 'class_to_idx'")
     model = models.resnet18()
@@ -184,7 +193,17 @@ def main():
     if missing:
         sys.exit(f"checkpoint classes not in data dict: {sorted(missing)}")
 
-    files = sorted((f for f in os.listdir(args.test_dir) if f.lower().endswith(IMG_EXT)), key=natural_key)
+    if not os.path.isdir(args.test_dir):
+        sys.exit(f"test folder not found: {args.test_dir}  (run from the right folder or pass --test-dir PATH)")
+    all_files = sorted((f for f in os.listdir(args.test_dir) if os.path.isfile(os.path.join(args.test_dir, f))), key=natural_key)
+    files = [f for f in all_files if f.lower().endswith(IMG_EXT)]
+    if not files:   # e.g. images saved without an extension: try every visible file, unreadable ones are guessed later
+        files = [f for f in all_files if "." not in f]
+        if files:
+            print(f"WARNING no files with an image extension in {args.test_dir}; using {len(files)} file(s) without extension")
+    ignored = [f for f in all_files if f not in set(files)]
+    if ignored:
+        print(f"NOTE ignored {len(ignored)} non-image file(s): {ignored[:5]}")
     if not files:
         sys.exit(f"no images found in {args.test_dir}")
 
